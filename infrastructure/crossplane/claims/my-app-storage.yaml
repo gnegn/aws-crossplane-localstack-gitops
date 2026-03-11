@@ -1,0 +1,12 @@
+apiVersion: devopsproject.io/v1alpha1
+kind: Storage
+metadata:
+  name: my-app-data
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  bucketName: amazing-gitops-bucket
+  compositionSelector:
+    matchLabels:
+      provider: aws
+      env: local

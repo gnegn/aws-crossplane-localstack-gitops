@@ -1,0 +1,44 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: local-s3-storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    provider: aws
+    env: local
+spec:
+  compositeTypeRef:
+    apiVersion: devopsproject.io/v1alpha1
+    kind: XStorage
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: s3Bucket
+            base:
+              apiVersion: s3.aws.upbound.io/v1beta1
+              kind: Bucket
+              spec:
+                forProvider:
+                  region: us-east-1
+                providerConfigRef:
+                  name: default
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.bucketName
+                toFieldPath: metadata.annotations['crossplane.io/external-name']
+          - name: notificationQueue
+            base:
+              apiVersion: sqs.aws.upbound.io/v1beta1
+              kind: Queue
+              spec:
+                forProvider:
+                  region: us-east-1
+                providerConfigRef:
+                  name: default
